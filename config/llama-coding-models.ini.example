@@ -1,0 +1,54 @@
+# https://github.com/kryoz/llama-strix-halo/blob/main/llama.ini
+# https://www.reddit.com/r/StrixHalo/comments/1u5i4g8/sharing_my_llamacpp_config_for_qwens_27b/
+[*]
+flash-attn = on
+mlock = on
+mmap = off
+fit-target = 12288
+split-mode = none
+warmup = on
+# This optimal value varies depending on backend, model and MTP. 2048 is max for ROCm, 1024 is max for Vulkan.
+ubatch-size = 1024
+batch-size  = 4096
+jinja = true
+metrics = on
+direct-io = on
+ctx-checkpoints = 16
+context-shift = off
+cache-prompt = true
+cache-reuse = 512
+cache-ram = 4096
+cache-idle-slots = on
+slot-prompt-similarity = 0.80
+top-k = 20
+top-p = 0.95
+min-p = 0.01
+temp = 0.6
+presence-penalty = 0.0
+repeat-penalty = 1.05
+swa-full = off
+
+# thinking
+reasoning = off
+reasoning-budget = 0
+chat-template-kwargs = {"enable_thinking":false}
+
+# spec decoding
+spec-type = draft-mtp,ngram-map-k
+spec-draft-n-min = 1
+spec-draft-n-max = 4
+spec-draft-p-min = 0.0
+spec-draft-p-split = 0.45
+spec-ngram-map-k-size-n = 8
+spec-ngram-map-k-size-m = 4
+spec-ngram-map-k-min-hits = 2
+
+[preset/qwen3.5-122B]
+model = /home/youruser/models/Qwen3.5-122B-A10B-MTP-GGUF/Qwen3.5-122B-A10B-UD-Q6_K-00001-of-00004.gguf
+# I set to lower val for memory saving
+cache-ram = 2500
+
+[preset/qwen3.6-27B]
+model = /home/youruser/models/Qwopus3.6-27B-v2-MTP-GGUF/Qwopus3.6-27B-v2-MTP-Q8_0.gguf
+#mmproj = /home/user/models/Qwen3.6-27B-GGUF/mmproj-BF16.gguf
+ubatch-size = 512

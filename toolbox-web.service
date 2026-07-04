@@ -1,0 +1,17 @@
+[Unit]
+Description=Toolbox Web Runner
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+# Edit the path below if you placed toolbox-web elsewhere
+WorkingDirectory=%h/toolbox-web
+# Host/port come from .env (FLASK_RUN_HOST / FLASK_RUN_PORT), loaded automatically.
+ExecStart=%h/.local/bin/uv run flask --app app run
+Restart=on-failure
+RestartSec=5
+Environment=PYTHONUNBUFFERED=1
+
+[Install]
+WantedBy=default.target

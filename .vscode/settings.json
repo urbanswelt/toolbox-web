@@ -1,0 +1,21 @@
+{
+  // Point Pylance / the Python extension at the uv-managed project venv so
+  // imports like `ruamel.yaml` resolve. The app itself always runs from here
+  // (`uv run flask --app app run`).
+  "python.defaultInterpreterPath": "${workspaceFolder}/.venv/bin/python",
+
+  // Keep the file watcher out of churny / generated dirs. These are added on
+  // top of VS Code's built-in defaults (.git/objects, .hg/store, etc.).
+  // Excluding .venv only stops *watching* it; Pylance still resolves imports
+  // from the interpreter above.
+  "files.watcherExclude": {
+    "**/.venv/**": true,
+    "**/__pycache__/**": true,
+    "**/.ruff_cache/**": true,
+    "**/.mypy_cache/**": true,
+    "**/.pytest_cache/**": true,
+    "**/node_modules/**": true,
+    "**/logs/**": true,
+    "**/*.pyc": true
+  }
+}

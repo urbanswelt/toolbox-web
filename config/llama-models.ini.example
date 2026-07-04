@@ -1,0 +1,118 @@
+# Global defaults for all models
+[*]
+mmap          = off
+n-gpu-layers  = 999
+flash-attn    = on
+parallel      = 1
+threads       = 12
+batch-size    = 4096
+ubatch-size   = 512
+jinja         = true
+cache-reuse   = 256
+# cache-type-k = q8_0
+# cache-type-v = q8_0
+
+# ---------------------------------------------------------------------------
+# Coder model — single-user setup, full 256k context
+# ---------------------------------------------------------------------------
+[preset/qwen3-coder-next-UD-Q8_K_XL]
+model          = /home/youruser/models/Qwen3-Coder-Next-GGUF/Qwen3-Coder-Next-UD-Q8_K_XL-00001-of-00003.gguf
+ctx-size       = 262144
+temp           = 0.2
+top-p          = 0.8
+top-k          = 20
+min-p          = 0.05
+repeat-penalty = 1.05
+
+# Same model, 4 parallel slots — each slot sees 64k context
+[preset/qwen3-coder-next-UD-Q8_K_XL_4agent]
+model          = /home/youruser/models/Qwen3-Coder-Next-GGUF/Qwen3-Coder-Next-UD-Q8_K_XL-00001-of-00003.gguf
+ctx-size       = 262144
+parallel       = 4
+temp           = 0.2
+top-p          = 0.8
+top-k          = 20
+min-p          = 0.05
+repeat-penalty = 1.05
+
+# ---------------------------------------------------------------------------
+# Qwen3.6 27B — general tasks, thinking mode
+# Sampling per Qwen3.6 model card (thinking mode, general)
+# ---------------------------------------------------------------------------
+[preset/qwen3.6-27b-bf16]
+model             = /home/youruser/models/Qwen3.6-27B-GGUF/Qwen3.6-27B-BF16-00001-of-00002.gguf
+ctx-size          = 131072
+temp              = 1.0
+top-p             = 0.95
+top-k             = 20
+min-p             = 0.0
+presence-penalty  = 1.5
+repeat-penalty    = 1.0
+
+[preset/qwen3.6-27b-bf16-mtp]
+model             = /home/youruser/models/Qwen3.6-27B-MTP-GGUF/Qwen3.6-27B-BF16-00001-of-00002.gguf
+ctx-size          = 262144
+spec-type         = draft-mtp
+spec-draft-n-max  = 3
+# Thinking mode — coding tasks (per Qwen3.6 model card)
+temp              = 0.6
+top-p             = 0.95
+top-k             = 20
+min-p             = 0.0
+presence-penalty  = 0.0
+repeat-penalty    = 1.0
+
+# ---------------------------------------------------------------------------
+# Qwen3.6 35B A3B — MoE, general + coding, thinking mode
+# ---------------------------------------------------------------------------
+[preset/qwen3.6-35b-a3b-bf16]
+model             = /home/youruser/models/Qwen3.6-35B-A3B-GGUF/Qwen3.6-35B-A3B-BF16-00001-of-00002.gguf
+ctx-size          = 262144
+# Thinking mode — general tasks (per Qwen3.6 model card)
+temp              = 1.0
+top-p             = 0.95
+top-k             = 20
+min-p             = 0.0
+presence-penalty  = 1.5
+repeat-penalty    = 1.0
+
+[preset/qwen3.6-35b-a3b-bf16-mtp]
+model             = /home/youruser/models/Qwen3.6-35B-A3B-MTP-GGUF/Qwen3.6-35B-A3B-BF16-00001-of-00002.gguf
+ctx-size          = 262144
+spec-type         = draft-mtp
+spec-draft-n-max  = 3
+# Thinking mode — general tasks (per Qwen3.6 model card)
+temp              = 1.0
+top-p             = 0.95
+top-k             = 20
+min-p             = 0.0
+presence-penalty  = 1.5
+repeat-penalty    = 1.0
+
+# ---------------------------------------------------------------------------
+# Gemma 4 31B — general assistant
+# Google recommends temp=1.0, top-p=0.95 for Gemma 4 IT models
+# ---------------------------------------------------------------------------
+[preset/gemma-4-31b-bf16]
+model          = /home/youruser/models/gemma-4-31B-it-GGUF/gemma-4-31B-it-BF16-00001-of-00002.gguf
+ctx-size       = 131072
+temp           = 1.0
+top-p          = 0.95
+top-k          = 64
+min-p          = 0.0
+repeat-penalty = 1.0
+
+# ---------------------------------------------------------------------------
+# Mistral Medium 3.5 128B — large general model
+# cache-type-k q8_0 keeps KV memory manageable at this size
+# ---------------------------------------------------------------------------
+[preset/mistral-med-3.5-128b-Q4_K_XL]
+model          = /home/youruser/models/Mistral-Medium-3.5-128B-GGUF/Mistral-Medium-3.5-128B-UD-Q4_K_XL-00001-of-00003.gguf
+ctx-size       = 131072
+cache-type-k   = q8_0
+cache-type-v   = q8_0
+temp           = 0.15
+top-p          = 0.9
+top-k          = 50
+min-p          = 0.0
+repeat-penalty = 1.0

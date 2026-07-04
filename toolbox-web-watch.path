@@ -1,0 +1,18 @@
+[Unit]
+Description=Watch toolbox-web code for changes and trigger restart
+After=toolbox-web.service
+
+# Watch only the CODE files. commands.yaml is intentionally NOT watched:
+# the app hot-reloads it on change, so editing commands (in the IDE or via the
+# in-app editor) must not trigger a service restart.
+#
+# The app logic now lives in the toolbox_web/ package; watching that directory
+# catches edits to any module in it (editor atomic-saves create/rename files,
+# which a directory watch sees) alongside the entrypoint and template.
+[Path]
+PathModified=TOOLBOX_WEB_DIR/app.py
+PathModified=TOOLBOX_WEB_DIR/toolbox_web
+PathModified=TOOLBOX_WEB_TEMPLATES_DIR/index.html
+
+[Install]
+WantedBy=default.target

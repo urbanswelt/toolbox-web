@@ -1,0 +1,485 @@
+# ============================================================================
+#  toolbox-web — command configuration
+# ----------------------------------------------------------------------------
+#  This file is LIVE: edit it and save — the running web app picks up changes
+#  on the next page load. No restart needed.
+#
+#  Structure:
+#    rules:                       evaluated top-to-bottom, FIRST match wins
+#      - match:                   how to match a toolbox/container by name
+#          type:  exact | prefix | suffix | contains | regex | default
+#          value: <string>        (omit for `default`, which matches everything)
+#        commands:                list of commands offered for matching boxes
+#          - cmd:         "<shell command run inside the toolbox>"
+#            label:       "<short name shown in the UI>"           (optional)
+#            description: "<what you'll SEE / what it does>"       (optional)
+#
+#  Put the `default` rule LAST — it is the catch-all.
+# ============================================================================
+
+rules:
+
+  # ── ComfyUI image-generation boxes ──────────────────────────────────────
+  - match: {type: contains, value: comfyui}
+    commands:
+      - cmd: "cd ~/ComfyUI && python main.py --listen 0.0.0.0 --port 8188"
+        label: "ComfyUI server"
+        description: >
+          Starts the ComfyUI server. You'll see Python import/model-load logs,
+          then a line like "To see the GUI go to: http://0.0.0.0:8188".
+          Open that address in a browser to use the node editor.
+
+  # ── vLLM inference box ──────────────────────────────────────────────────
+  - match: {type: prefix, value: vllm}
+    commands:
+      - cmd: >-
+          VLLM_DISABLE_COMPILE_CACHE=1 vllm serve google/translategemma-27b-it
+          --api-key sk-REPLACE-WITH-YOUR-API-KEY
+          --host 0.0.0.0
+          --port 8081
+          --tensor-parallel-size 1
+          --max-num-seqs 1
+          --max-model-len 8192
+          --gpu-memory-utilization 0.90
+          --dtype auto
+          --attention-backend TRITON_ATTN
+          --mm-encoder-attn-backend TRITON_ATTN
+        label: "start google/translategemma-27b-it"
+        description: >
+          Strix-Halo vLLM preset for TranslateGemma 27B (original Google checkpoint).
+          WARNING: This model has known vLLM compatibility issues — custom JSON inputs
+          (source_lang_code/target_lang_code), non-standard RoPE, and wrong EOS token.
+          Prefer Infomaniak-AI/vllm-translategemma-27b-it for reliable vLLM serving.
+          TP=1, input max-model-len 2048, Triton attention. No tool-call parser.
+
+      - cmd: >-
+          VLLM_DISABLE_COMPILE_CACHE=1 vllm serve Infomaniak-AI/vllm-translategemma-27b-it
+          --served-model-name local vllm-translategemma-27b-it
+          --api-key sk-REPLACE-WITH-YOUR-API-KEY
+          --host 0.0.0.0
+          --port 8081
+          --tensor-parallel-size 1
+          --max-num-seqs 1
+          --max-model-len 8192
+          --gpu-memory-utilization 0.90
+          --dtype auto
+          --attention-backend TRITON_ATTN
+          --mm-encoder-attn-backend TRITON_ATTN
+        label: "start Infomaniak-AI/vllm-translategemma-27b-it"
+        description: >
+          Strix-Halo vLLM preset for TranslateGemma 27B. Uses Infomaniak-AI optimized
+          checkpoint for vLLM compatibility (string delimiters, standard RoPE, EOS fix).
+          TP=1, max-model-len 2048 (model input context limit), Triton attention.
+          Prompt format: <<<source>>>{src_lang}<<<target>>>{tgt_lang}<<<text>>>{text}
+
+      - cmd: VLLM_SERVER_DEV_MODE=1 vllm serve Qwen/Qwen3.6-35B-A3B --served-model-name local Qwen/Qwen3.6-35B-A3B --api-key sk-REPLACE-WITH-YOUR-API-KEY --host 0.0.0.0 --port 8081 --tensor-parallel-size 1 --max-num-seqs 2 --max-model-len 262144 --gpu-memory-utilization 0.90 --trust-remote-code --attention-backend TRITON_ATTN --mm-encoder-attn-backend TRITON_ATTN
+        label: start Qwen3.6-35B-A3B
+        description: Serves Qwen3.6-35B-A3B directly with vLLM. You'll see weight loading and KV-cache allocation, then "Uvicorn running on http://0.0.0.0:8081". The OpenAI-compatible API is then reachable at http://<host>:8081/v1. float16, 2 concurrent sequences, 262k context, 85% GPU memory.
+      - cmd: >-
+          VLLM_DISABLE_COMPILE_CACHE=1 vllm serve meta-llama/Meta-Llama-3.1-8B-Instruct
+          --api-key sk-REPLACE-WITH-YOUR-API-KEY
+          --host 0.0.0.0
+          --port 8081
+          --tensor-parallel-size 1
+          --max-num-seqs 1
+          --max-model-len 32768
+          --gpu-memory-utilization 0.90
+          --dtype auto
+          --enable-auto-tool-choice
+          --tool-call-parser llama3_json
+          --attention-backend TRITON_ATTN
+          --mm-encoder-attn-backend TRITON_ATTN
+        label: "start Meta-Llama-3.1-8B-Instruct (strix-halo)"
+        description: >
+          Strix-Halo vLLM preset (from kyuz0/amd-strix-halo-vllm-toolboxes models.py). TP=1, max-model-len 32768, Triton attention, eager off.
+
+      - cmd: >-
+          VLLM_DISABLE_COMPILE_CACHE=1 VLLM_STRIX_FP8_TRITON=1 VLLM_ROCM_USE_AITER=0 vllm serve RedHatAI/Meta-Llama-3.1-8B-Instruct-FP8-dynamic
+          --api-key sk-REPLACE-WITH-YOUR-API-KEY
+          --host 0.0.0.0
+          --port 8081
+          --tensor-parallel-size 1
+          --max-num-seqs 1
+          --max-model-len 32768
+          --gpu-memory-utilization 0.90
+          --dtype auto
+          --enforce-eager
+          --enable-auto-tool-choice
+          --tool-call-parser llama3_json
+          --attention-backend TRITON_ATTN
+          --mm-encoder-attn-backend TRITON_ATTN
+        label: "start Meta-Llama-3.1-8B-Instruct-FP8-dynamic (strix-halo)"
+        description: >
+          Strix-Halo vLLM preset (from kyuz0/amd-strix-halo-vllm-toolboxes models.py). TP=1, max-model-len 32768, Triton attention, eager on.
+
+      - cmd: >-
+          VLLM_DISABLE_COMPILE_CACHE=1 vllm serve google/gemma-4-26B-A4B-it
+          --api-key sk-REPLACE-WITH-YOUR-API-KEY
+          --host 0.0.0.0
+          --port 8081
+          --tensor-parallel-size 1
+          --max-num-seqs 1
+          --max-model-len 32768
+          --gpu-memory-utilization 0.90
+          --dtype auto
+          --enable-auto-tool-choice
+          --tool-call-parser gemma4
+          --reasoning-parser gemma4
+          --attention-backend TRITON_ATTN
+          --mm-encoder-attn-backend TRITON_ATTN
+        label: "start gemma-4-26B-A4B-it (strix-halo)"
+        description: >
+          Strix-Halo vLLM preset (from kyuz0/amd-strix-halo-vllm-toolboxes models.py). TP=1, max-model-len 32768, Triton attention, eager off.
+
+      - cmd: >-
+          VLLM_DISABLE_COMPILE_CACHE=1 vllm serve google/gemma-4-31B-it
+          --api-key sk-REPLACE-WITH-YOUR-API-KEY
+          --host 0.0.0.0
+          --port 8081
+          --tensor-parallel-size 1
+          --max-num-seqs 1
+          --max-model-len 32768
+          --gpu-memory-utilization 0.90
+          --dtype auto
+          --enable-auto-tool-choice
+          --tool-call-parser gemma4
+          --reasoning-parser gemma4
+          --attention-backend TRITON_ATTN
+          --mm-encoder-attn-backend TRITON_ATTN
+        label: "start gemma-4-31B-it (strix-halo)"
+        description: >
+          Strix-Halo vLLM preset (from kyuz0/amd-strix-halo-vllm-toolboxes models.py). TP=1, max-model-len 32768, Triton attention, eager off.
+
+      - cmd: >-
+          VLLM_DISABLE_COMPILE_CACHE=1 vllm serve openai/gpt-oss-20b
+          --api-key sk-REPLACE-WITH-YOUR-API-KEY
+          --host 0.0.0.0
+          --port 8081
+          --tensor-parallel-size 1
+          --max-num-seqs 1
+          --max-model-len 8192
+          --gpu-memory-utilization 0.90
+          --dtype auto
+          --trust-remote-code
+          --enable-auto-tool-choice
+          --tool-call-parser openai
+          --reasoning-parser openai_gptoss
+          --attention-backend TRITON_ATTN
+          --mm-encoder-attn-backend TRITON_ATTN
+        label: "start gpt-oss-20b (strix-halo)"
+        description: >
+          Strix-Halo vLLM preset (from kyuz0/amd-strix-halo-vllm-toolboxes models.py). TP=1, max-model-len 8192, Triton attention, eager off.
+
+      - cmd: >-
+          VLLM_DISABLE_COMPILE_CACHE=1 vllm serve openai/gpt-oss-120b
+          --api-key sk-REPLACE-WITH-YOUR-API-KEY
+          --host 0.0.0.0
+          --port 8081
+          --tensor-parallel-size 1
+          --max-num-seqs 1
+          --max-model-len 8192
+          --gpu-memory-utilization 0.90
+          --dtype auto
+          --trust-remote-code
+          --enable-auto-tool-choice
+          --tool-call-parser openai
+          --reasoning-parser openai_gptoss
+          --attention-backend TRITON_ATTN
+          --mm-encoder-attn-backend TRITON_ATTN
+        label: "start gpt-oss-120b (strix-halo)"
+        description: >
+          Strix-Halo vLLM preset (from kyuz0/amd-strix-halo-vllm-toolboxes models.py). TP=1, max-model-len 8192, Triton attention, eager off.
+
+      - cmd: >-
+          VLLM_DISABLE_COMPILE_CACHE=1 vllm serve Qwen/Qwen3.6-35B-A3B
+          --api-key sk-REPLACE-WITH-YOUR-API-KEY
+          --host 0.0.0.0
+          --port 8081
+          --tensor-parallel-size 1
+          --max-num-seqs 1
+          --max-model-len 16384
+          --gpu-memory-utilization 0.90
+          --dtype auto
+          --trust-remote-code
+          --enable-auto-tool-choice
+          --tool-call-parser qwen3_coder
+          --reasoning-parser qwen3
+          --attention-backend TRITON_ATTN
+          --mm-encoder-attn-backend TRITON_ATTN
+        label: "start Qwen3.6-35B-A3B (strix-halo)"
+        description: >
+          Strix-Halo vLLM preset (from kyuz0/amd-strix-halo-vllm-toolboxes models.py). TP=1, max-model-len 16384, Triton attention, eager off.
+
+      - cmd: >-
+          VLLM_DISABLE_COMPILE_CACHE=1 VLLM_USE_TRITON_AWQ=1 vllm serve cyankiwi/Qwen3.6-35B-A3B-AWQ-4bit
+          --api-key sk-REPLACE-WITH-YOUR-API-KEY
+          --host 0.0.0.0
+          --port 8081
+          --tensor-parallel-size 1
+          --max-num-seqs 1
+          --max-model-len 16384
+          --gpu-memory-utilization 0.90
+          --dtype auto
+          --trust-remote-code
+          --enforce-eager
+          --enable-auto-tool-choice
+          --tool-call-parser qwen3_coder
+          --reasoning-parser qwen3
+          --attention-backend TRITON_ATTN
+          --mm-encoder-attn-backend TRITON_ATTN
+        label: "start Qwen3.6-35B-A3B-AWQ-4bit (strix-halo)"
+        description: >
+          Strix-Halo vLLM preset (from kyuz0/amd-strix-halo-vllm-toolboxes models.py). TP=1, max-model-len 16384, Triton attention, eager on.
+
+      - cmd: >-
+          VLLM_DISABLE_COMPILE_CACHE=1 VLLM_USE_TRITON_AWQ=1 vllm serve cyankiwi/Qwen3.5-122B-A10B-AWQ-4bit
+          --api-key sk-REPLACE-WITH-YOUR-API-KEY
+          --host 0.0.0.0
+          --port 8081
+          --tensor-parallel-size 1
+          --max-num-seqs 1
+          --max-model-len 16384
+          --gpu-memory-utilization 0.90
+          --dtype auto
+          --trust-remote-code
+          --enforce-eager
+          --enable-auto-tool-choice
+          --tool-call-parser qwen3_coder
+          --reasoning-parser qwen3
+          --attention-backend TRITON_ATTN
+          --mm-encoder-attn-backend TRITON_ATTN
+        label: "start Qwen3.5-122B-A10B-AWQ-4bit (strix-halo)"
+        description: >
+          Strix-Halo vLLM preset (from kyuz0/amd-strix-halo-vllm-toolboxes models.py). TP=1, max-model-len 16384, Triton attention, eager on.
+
+      - cmd: >-
+          VLLM_DISABLE_COMPILE_CACHE=1 VLLM_USE_TRITON_AWQ=1 vllm serve cyankiwi/Qwen3.5-122B-A10B-AWQ-8bit
+          --api-key sk-REPLACE-WITH-YOUR-API-KEY
+          --host 0.0.0.0
+          --port 8081
+          --tensor-parallel-size 2
+          --max-num-seqs 1
+          --max-model-len 16384
+          --gpu-memory-utilization 0.90
+          --dtype auto
+          --trust-remote-code
+          --enforce-eager
+          --enable-auto-tool-choice
+          --tool-call-parser qwen3_coder
+          --reasoning-parser qwen3
+          --attention-backend TRITON_ATTN
+          --mm-encoder-attn-backend TRITON_ATTN
+        label: "start Qwen3.5-122B-A10B-AWQ-8bit (strix-halo)"
+        description: >
+          Strix-Halo vLLM preset (from kyuz0/amd-strix-halo-vllm-toolboxes models.py). TP=2, max-model-len 16384, Triton attention, eager on. Requires 2 GPUs (tensor-parallel).
+
+      - cmd: >-
+          VLLM_DISABLE_COMPILE_CACHE=1 VLLM_USE_TRITON_AWQ=1 vllm serve cyankiwi/MiniMax-M2.7-AWQ-4bit
+          --api-key sk-REPLACE-WITH-YOUR-API-KEY
+          --host 0.0.0.0
+          --port 8081
+          --tensor-parallel-size 2
+          --max-num-seqs 1
+          --max-model-len 16384
+          --gpu-memory-utilization 0.90
+          --dtype auto
+          --trust-remote-code
+          --enforce-eager
+          --enable-auto-tool-choice
+          --tool-call-parser minimax_m2
+          --reasoning-parser deepseek_r1
+          --attention-backend TRITON_ATTN
+          --mm-encoder-attn-backend TRITON_ATTN
+        label: "start MiniMax-M2.7-AWQ-4bit (strix-halo)"
+        description: >
+          Strix-Halo vLLM preset (from kyuz0/amd-strix-halo-vllm-toolboxes models.py). TP=2, max-model-len 16384, Triton attention, eager on. Requires 2 GPUs (tensor-parallel).
+
+      - cmd: >-
+          VLLM_DISABLE_COMPILE_CACHE=1 VLLM_USE_TRITON_AWQ=1 vllm serve ayysasha/MiniMax-M2.7-AWQ-G32-STRIX-2H
+          --api-key sk-REPLACE-WITH-YOUR-API-KEY
+          --host 0.0.0.0
+          --port 8081
+          --tensor-parallel-size 2
+          --max-num-seqs 1
+          --max-model-len 131072
+          --gpu-memory-utilization 0.90
+          --dtype auto
+          --trust-remote-code
+          --enforce-eager
+          --enable-auto-tool-choice
+          --tool-call-parser minimax_m2
+          --reasoning-parser deepseek_r1
+          --attention-backend TRITON_ATTN
+          --mm-encoder-attn-backend TRITON_ATTN
+        label: "start MiniMax-M2.7-AWQ-G32-STRIX-2H (strix-halo)"
+        description: >
+          Strix-Halo vLLM preset (from kyuz0/amd-strix-halo-vllm-toolboxes models.py). TP=2, max-model-len 131072, Triton attention, eager on. Requires 2 GPUs (tensor-parallel).
+
+      - cmd: "bash /home/youruser/toolbox-web/scripts/stop-server.sh 8081 'vllm serve'"
+        label: "shutdown vLLM (port 8081)"
+        description: >
+          Gracefully stops the vLLM server listening on port 8081 (vLLM has no
+          HTTP shutdown endpoint) by sending SIGTERM. Uses stop-server.sh, which
+          verifies the process is vLLM and works even on toolboxes without `ss`.
+          If you change the serve port, change 8081 here too.
+
+      - cmd: "rm -rf ~/.cache/vllm && mkdir -p ~/.cache/vllm && echo 'Cleared vLLM cache (~/.cache/vllm) — the next model start will recompile graphs.'"
+        label: "clear vLLM cache"
+        description: >
+          Deletes ~/.cache/vllm (the compiled compute graphs) and recreates it —
+          the same wipe start_vllm.py runs by default. Use this after a vLLM/ROCm
+          version change if you hit 'invalid graph' errors or startup crashes.
+          The next model start will be slower while graphs recompile. Stop the
+          server first.
+
+  # ── llama.cpp with MTP speculative draft ────────────────────────────────
+  - match: {type: suffix, value: "-mtp"}
+    commands:
+      - cmd: >-
+          llama-server -ngl 999 -c 262144 -fa on -np 1
+          --spec-type draft-mtp
+          --api-key-file ~/toolbox-web/config/llama-keys.txt
+          --spec-draft-n-max 6
+          -m /home/youruser/models/qwen3.6-35b-a3b-bf16-mtp/Qwen3.6-35B-A3B-BF16-00001-of-00002.gguf
+          --host 0.0.0.0 --port 8081 --temp 0.6 --top-p 0.95 --top-k 20
+          --min-p 0.00 --presence-penalty 0.0 --repeat-penalty 1 --no-mmproj --jinja
+        label: "llama-server — Qwen3.6 BF16 + MTP draft"
+        description: >
+          Loads Qwen3.6-35B-A3B (BF16) with MTP speculative decoding. You'll see
+          GGUF tensor loading and full GPU offload (999 layers), then
+          "server listening on 0.0.0.0:8081". API at http://<host>:8081.
+
+      - cmd: "llama-server --models-preset ~/toolbox-web/config/llama-models.ini --api-key-file ~/toolbox-web/config/llama-keys.txt --models-max 1 --host 0.0.0.0 --port 8081 --tools all"
+        label: "llama-server — preset, tools enabled"
+        description: >
+          Serves models from llama-models.ini (max 1 loaded) with tool/function
+          calling enabled. Listens on port 8081.
+
+      - cmd: "bash /home/youruser/toolbox-web/scripts/stop-server.sh 8081 'llama-server'"
+        label: "shutdown llama-server (port 8081)"
+        description: >
+          Gracefully stops the llama-server listening on port 8081 (it has no
+          HTTP shutdown endpoint) by sending SIGTERM. Uses stop-server.sh, which
+          verifies the process is llama-server and works even on toolboxes
+          without `ss`. The container stops once nothing else is running in it.
+
+  # ── llama.cpp on Vulkan ─────────────────────────────────────────────────
+  - match: {type: prefix, value: "llama-vulkan-"}
+    commands:
+      - cmd: "llama-server --models-preset ~/toolbox-web/config/llama-models.ini --api-key-file ~/toolbox-web/config/llama-keys.txt --models-max 1 --host 0.0.0.0 --port 8081"
+        label: "General models"
+        description: >
+          Serves the general model preset on port 8081. Watch for GGUF load
+          then "server listening on 0.0.0.0:8081".
+
+      - cmd: "llama-server --models-preset ~/toolbox-web/config/llama-models.ini --api-key-file ~/toolbox-web/config/llama-keys.txt --models-max 1 --host 0.0.0.0 --port 8081 --tools all"
+        label: "General models + tools"
+        description: "Same as above, with tool/function calling enabled."
+
+      - cmd: "llama-server --models-preset ~/toolbox-web/config/llama-coding-models.ini --api-key-file ~/toolbox-web/config/llama-keys.txt --models-max 1 --host 0.0.0.0 --port 8081"
+        label: "Coding models"
+        description: "Serves the coding model preset (llama-coding-models.ini) on port 8081."
+
+      - cmd: "llama-server --models-preset ~/toolbox-web/config/llama-coding-models.ini --api-key-file ~/toolbox-web/config/llama-keys.txt --models-max 1 --host 0.0.0.0 --port 8081 --tools all"
+        label: "Coding models + tools"
+        description: "Coding preset with tool/function calling enabled."
+
+      - cmd: "llama-server --models-preset ~/toolbox-web/config/llama-models.ini --api-key-file ~/toolbox-web/config/llama-keys.txt --models-max 1 --host 0.0.0.0 --port 8081 --verbose --log-timestamps --log-file llama.log"
+        label: "General models (verbose, logged)"
+        description: >
+          General preset with verbose, timestamped logging written to llama.log.
+          Use this when debugging — the terminal shows detailed request logs.
+
+      - cmd: "bash /home/youruser/toolbox-web/scripts/stop-server.sh 8081 'llama-server'"
+        label: "shutdown llama-server (port 8081)"
+        description: >
+          Gracefully stops the llama-server listening on port 8081 (it has no
+          HTTP shutdown endpoint) by sending SIGTERM. Uses stop-server.sh, which
+          verifies the process is llama-server and works even on toolboxes
+          without `ss`. The container stops once nothing else is running in it.
+
+  # ── llama.cpp (ROCm and any other llama-* box) ──────────────────────────
+  #  Prefix "llama-" also covers "llama-rocm-*". The Vulkan rule above is
+  #  matched first, so it wins for llama-vulkan-* boxes.
+  - match: {type: prefix, value: "llama-"}
+    commands:
+      - cmd: "llama-server --models-preset ~/toolbox-web/config/llama-models.ini --api-key-file ~/toolbox-web/config/llama-keys.txt --models-max 1 --host 0.0.0.0 --port 8081"
+        label: "General models"
+        description: >
+          Serves the general model preset on port 8081. Watch for GGUF load
+          then "server listening on 0.0.0.0:8081".
+
+      - cmd: "llama-server --models-preset ~/toolbox-web/config/llama-models.ini --api-key-file ~/toolbox-web/config/llama-keys.txt --models-max 1 --host 0.0.0.0 --port 8081 --tools all"
+        label: "General models + tools"
+        description: "Same as above, with tool/function calling enabled."
+
+      - cmd: "llama-server --models-preset ~/toolbox-web/config/llama-coding-models.ini --api-key-file ~/toolbox-web/config/llama-keys.txt --models-max 1 --host 0.0.0.0 --port 8081"
+        label: "Coding models"
+        description: "Serves the coding model preset (llama-coding-models.ini) on port 8081."
+
+      - cmd: "llama-server --models-preset ~/toolbox-web/config/llama-coding-models.ini --api-key-file ~/toolbox-web/config/llama-keys.txt --models-max 1 --host 0.0.0.0 --port 8081 --tools all"
+        label: "Coding models + tools"
+        description: "Coding preset with tool/function calling enabled."
+
+      - cmd: "llama-server --models-preset ~/toolbox-web/config/llama-models.ini --api-key-file ~/toolbox-web/config/llama-keys.txt --models-max 1 --host 0.0.0.0 --port 8081 --verbose --log-timestamps --log-file llama.log"
+        label: "General models (verbose, logged)"
+        description: >
+          General preset with verbose, timestamped logging written to llama.log.
+          Use this when debugging — the terminal shows detailed request logs.
+
+      - cmd: "bash /home/youruser/toolbox-web/scripts/stop-server.sh 8081 'llama-server'"
+        label: "shutdown llama-server (port 8081)"
+        description: >
+          Gracefully stops the llama-server listening on port 8081 (it has no
+          HTTP shutdown endpoint) by sending SIGTERM. Uses stop-server.sh, which
+          verifies the process is llama-server and works even on toolboxes
+          without `ss`. The container stops once nothing else is running in it.
+
+  # ── Default: any other toolbox ──────────────────────────────────────────
+  - match: {type: default}
+    commands:
+      - cmd: "bash"
+        label: "Interactive shell"
+        description: "Opens a plain interactive bash shell inside the toolbox."
+
+      - cmd: "curl -X POST 'localhost:8081/sleep?level=2'"
+        label: "Put Qwen3 to sleep, wake up Coder"
+        description: >
+          Put Qwen3 to sleep, wake up Coder. !!! NOT WORKING AT THE MOMENT !!!
+
+
+# ── Host maintenance ─────────────────────────────────────────────────────────
+# These run directly on the HOST (not inside a toolbox), via a login shell so
+# hf / hf-link are on PATH. Shown under "Maintenance" in the sidebar.
+host_commands:
+  - cmd: "/home/youruser/toolbox-web/.venv/bin/python /home/youruser/toolbox-web/scripts/hf_check_updates.py"
+    label: "Check model updates"
+    description: >
+      Read-only: checks every Hugging Face model in the local cache against the
+      Hub and reports which are up to date vs outdated. Downloads nothing.
+
+  - cmd: "/home/youruser/toolbox-web/.venv/bin/python /home/youruser/toolbox-web/scripts/sync_models.py"
+    label: "Sync / update models"
+    description: >
+      Downloads/updates the curated model list (hf-link), refreshes the
+      ~/models symlinks, then runs 'hf cache prune'. Long-running — watch the
+      download progress in the terminal. Pulls several GB.
+
+
+# ── Toolbox source repos (the update manager) ────────────────────────────────
+# Git clones the update manager pulls + rebuilds. Paths use ~ so they stay
+# portable across machines/users (the app expands ~ on load). If this section is
+# absent, the app falls back to a built-in default with the same three repos.
+toolbox_repos:
+  - name: comfyui-toolboxes
+    path: ~/github/amd-strix-halo-comfyui-toolboxes
+    update: git pull && ./refresh-toolbox.sh latest
+  - name: strix-halo-toolboxes
+    path: ~/github/amd-strix-halo-toolboxes
+    update: git pull && ./refresh-toolboxes.sh all
+  - name: vllm-toolboxes
+    path: ~/github/amd-strix-halo-vllm-toolboxes
+    update: >-
+      git pull && ./refresh_toolbox.sh latest &&
+      sed 's/^TOOLBOX_NAME=.*/TOOLBOX_NAME="vllm-dev"/'
+      refresh_toolbox.sh | bash -s -- dev

@@ -1,0 +1,34 @@
+# Curated model list — `sync-models` downloads each repo and links it into the
+# model store (~/models). Each entry: name (the ~/models/<name> symlink), repo
+# (HF id), pattern (include glob; blank or "*" = all files).
+models:
+- {name: Step-3.7-Flash-GGUF, repo: stepfun-ai/Step-3.7-Flash-GGUF, pattern: Q4_K_S/*}
+- {name: Mistral-Medium-3.5-128B-GGUF, repo: unsloth/Mistral-Medium-3.5-128B-GGUF, pattern: UD-Q4_K_XL/*}
+- {name: Qwen3-Coder-30B-A3B-Instruct-GGUF, repo: unsloth/Qwen3-Coder-30B-A3B-Instruct-GGUF, pattern: BF16/*}
+- {name: Qwen3-Coder-Next-GGUF, repo: unsloth/Qwen3-Coder-Next-GGUF, pattern: UD-Q8_K_XL/*}
+- {name: Qwen3.6-27B-GGUF, repo: unsloth/Qwen3.6-27B-GGUF, pattern: BF16/*}
+- {name: Qwen3.6-27B-MTP-GGUF, repo: unsloth/Qwen3.6-27B-MTP-GGUF, pattern: BF16/*}
+- {name: Qwen3.6-35B-A3B-GGUF, repo: unsloth/Qwen3.6-35B-A3B-GGUF, pattern: BF16/*}
+- {name: Qwen3.6-35B-A3B-MTP-GGUF, repo: unsloth/Qwen3.6-35B-A3B-MTP-GGUF, pattern: BF16/*}
+- {name: gemma-4-31B-it-GGUF, repo: unsloth/gemma-4-31B-it-GGUF, pattern: BF16/*}
+- {name: Qwopus3.6-27B-Coder-MTP-GGUF, repo: Jackrong/Qwopus3.6-27B-Coder-MTP-GGUF, pattern: '*BF16*'}
+- {name: Qwen3.5-122B-A10B-MTP-GGUF, repo: unsloth/Qwen3.5-122B-A10B-MTP-GGUF, pattern: UD-Q6_K/*}
+- {name: Qwopus3.6-27B-v2-MTP-GGUF, repo: Jackrong/Qwopus3.6-27B-v2-MTP-GGUF, pattern: '*Q8_0*'}
+- {name: Qwen3.6-35B-A3B, repo: Qwen/Qwen3.6-35B-A3B, pattern: '*'}
+- {name: Qwen3.6-35B-A3B-FP8, repo: Qwen/Qwen3.6-35B-A3B-FP8, pattern: '*'}
+- {name: Qwen3.6-35B-A3B-AWQ-4bit, repo: cyankiwi/Qwen3.6-35B-A3B-AWQ-4bit, pattern: '*'}
+- {name: translategemma-27b-it, repo: google/translategemma-27b-it, pattern: '*'}
+- {name: vllm-translategemma-27b-it, repo: Infomaniak-AI/vllm-translategemma-27b-it, pattern: '*'}
+- {name: Meta-Llama-3.1-8B-Instruct, repo: meta-llama/Meta-Llama-3.1-8B-Instruct, pattern: '*'}
+- {name: Meta-Llama-3.1-8B-Instruct-FP8-dynamic, repo: RedHatAI/Meta-Llama-3.1-8B-Instruct-FP8-dynamic, pattern: '*'}
+- {name: gemma-4-26B-A4B-it, repo: google/gemma-4-26B-A4B-it, pattern: '*'}
+- {name: gemma-4-31B-it, repo: google/gemma-4-31B-it, pattern: '*'}
+- {name: gpt-oss-20b, repo: openai/gpt-oss-20b, pattern: '*'}
+- {name: gpt-oss-120b, repo: openai/gpt-oss-120b, pattern: '*'}
+- {name: Qwen3.5-122B-A10B-AWQ-4bit, repo: cyankiwi/Qwen3.5-122B-A10B-AWQ-4bit, pattern: '*'}
+- {name: Qwen3.5-122B-A10B-AWQ-8bit, repo: cyankiwi/Qwen3.5-122B-A10B-AWQ-8bit, pattern: '*'}
+- {name: MiniMax-M2.7-AWQ-4bit, repo: cyankiwi/MiniMax-M2.7-AWQ-4bit, pattern: '*'}
+- {name: MiniMax-M2.7-AWQ-G32-STRIX-2H, repo: ayysasha/MiniMax-M2.7-AWQ-G32-STRIX-2H, pattern: '*'}
+- {name: gemma-4-26B-A4B-it-qat-q4_0-unquantized_unsloth, repo: unsloth/gemma-4-26B-A4B-it-qat-q4_0-unquantized, pattern: '*'}
+- {name: gemma-4-26B-A4B-it-qat-q4_0-unquantized, repo: google/gemma-4-26B-A4B-it-qat-q4_0-unquantized, pattern: '*'}
+- {name: Qwen-AgentWorld-35B-A3B, repo: Qwen/Qwen-AgentWorld-35B-A3B, pattern: '*'}

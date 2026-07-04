@@ -1,0 +1,24 @@
+# Live config — machine-specific paths, personal model lists, and API keys.
+# These are gitignored; ship sanitized *.example files instead (copy to the
+# real name on a fresh clone). Never commit the live files.
+config/*
+!config/*.example
+
+# Local environment overrides (copy from .env.example). May hold secrets.
+.env
+
+# uv-managed virtualenv (rebuilt from pyproject.toml + uv.lock via `uv sync`)
+.venv/
+
+# Python bytecode
+__pycache__/
+*.pyc
+
+# Tooling caches (rebuilt automatically)
+.ruff_cache/
+
+# Atomic-write backups the app creates next to edited files (commands.yaml.bak, *.ini.bak)
+*.bak
+
+# Local logs
+logs/*.log
