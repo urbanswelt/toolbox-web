@@ -21,6 +21,15 @@ jobs:
       - name: Sync dependencies (incl. dev group)
         run: uv sync --group dev
 
+      # requirements.txt is a generated pip fallback — it must stay a faithful
+      # export of uv.lock. Re-export and fail if it drifts (e.g. a lock bump that
+      # forgot to regenerate it, or a hand-edit of the derived file).
+      - name: requirements.txt in sync with uv.lock
+        run: |
+          uv export --no-hashes --no-emit-project -o requirements.txt
+          git diff --exit-code requirements.txt \
+            || { echo "::error::requirements.txt is out of sync with uv.lock. Run: uv export --no-hashes --no-emit-project -o requirements.txt"; exit 1; }
+
       - name: Lint
         run: uv run ruff check .
 
