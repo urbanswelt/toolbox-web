@@ -1,0 +1,29 @@
+version: 2
+
+# Dependabot opens PRs only (no auto-merge). Each PR runs CI (.github/workflows/
+# ci.yml) — lint + the boot smoke test — so a breaking bump shows up as a red
+# check before you merge. Review the check, then merge manually.
+updates:
+  # Python dependencies (pyproject.toml + uv.lock).
+  - package-ecosystem: "uv"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "deps"
+    # One grouped PR for all updates instead of a PR per package.
+    groups:
+      python-dependencies:
+        patterns: ["*"]
+
+  # Keep the GitHub Actions used in ci.yml current too.
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    commit-message:
+      prefix: "ci"
+    groups:
+      github-actions:
+        patterns: ["*"]

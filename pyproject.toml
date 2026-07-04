@@ -13,4 +13,11 @@ dependencies = [
 [dependency-groups]
 dev = [
     "ruff>=0.15.20",
+    "pytest>=8.0",
 ]
+
+[tool.pytest.ini_options]
+# The app isn't installed as a package (it's run from the repo root), so put the
+# root on sys.path for `import toolbox_web`.
+pythonpath = ["."]
+testpaths = ["tests"]
