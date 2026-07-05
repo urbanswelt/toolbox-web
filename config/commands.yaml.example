@@ -465,6 +465,20 @@ host_commands:
       ~/models symlinks, then runs 'hf cache prune'. Long-running — watch the
       download progress in the terminal. Pulls several GB.
 
+  - cmd: >-
+      cd /home/youruser/toolbox-web &&
+      git pull &&
+      /home/youruser/.local/bin/uv sync &&
+      systemctl --user restart toolbox-web.service
+    label: "Update & restart toolbox-web"
+    description: >
+      Pulls the latest code + uv.lock from GitHub, installs any changed
+      dependencies into the venv (uv sync), then restarts the service. Run this
+      after a Dependabot/package update is merged. 'uv sync' runs before the
+      restart so any install error surfaces while the app is still up; the web
+      UI will briefly disconnect and reconnect when the service restarts.
+      Adjust the path and 'uv' location if you installed elsewhere.
+
 
 # ── Toolbox source repos (the update manager) ────────────────────────────────
 # Git clones the update manager pulls + rebuilds. Paths use ~ so they stay
