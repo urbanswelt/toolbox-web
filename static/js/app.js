@@ -240,6 +240,60 @@ async function loadStats() {
 loadStats();
 setInterval(loadStats, 2000);
 
+// ── App self-update banner ────────────────────────────────────────────────────
+// Polls /api/app-update; the server fetches the git remote in the background, so
+// this is a cheap read. Banner shows when the checkout is behind upstream.
+let _updateInfo = null;
+let _updateDismissedAt = 0;  // checked_at we dismissed, so a newer check re-shows it
+
+async function loadAppUpdate() {
+  const res = await fetch('/api/app-update').catch(() => null);
+  if (!res) return;
+  _updateInfo = await res.json().catch(() => null);
+  renderUpdateBanner();
+}
+
+function renderUpdateBanner() {
+  const el = document.getElementById('updateBanner');
+  const info = _updateInfo;
+  const dismissed = info && info.checked_at && info.checked_at <= _updateDismissedAt;
+  if (!info || !info.available || dismissed) { el.hidden = true; return; }
+
+  const n = info.behind;
+  document.getElementById('updateBannerText').textContent =
+    `Update available — ${n} new commit${n === 1 ? '' : 's'} on ${info.branch} upstream.`;
+  const list = (info.incoming || []).map(c => `${c.sha}  ${c.subject}`).join('\n');
+  if (list) el.title = list;
+  el.hidden = false;
+}
+
+function dismissUpdateBanner() {
+  if (_updateInfo) _updateDismissedAt = _updateInfo.checked_at || Date.now() / 1000;
+  renderUpdateBanner();
+}
+
+// Reuse the normal host-session run path: the update streams in the terminal,
+// then the service restarts (the stream drops — expected; reconnect after).
+async function runAppUpdate() {
+  if (!_updateInfo || !_updateInfo.update_command) return;
+  const btn = document.getElementById('updateBannerBtn');
+  btn.disabled = true; btn.textContent = 'updating…';
+  const res = await fetch('/api/run', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ container: '__host__', command: _updateInfo.update_command }),
+  }).catch(() => null);
+  btn.disabled = false; btn.textContent = 'Update & restart';
+  if (!res) return;
+  const data = await res.json();
+  if (data.error) return;
+  openStream(data.session, '▶ host › update & restart toolbox-web');
+  refreshAll();
+}
+
+loadAppUpdate();
+setInterval(loadAppUpdate, 5 * 60 * 1000);
+
 // ── Sessions list ─────────────────────────────────────────────────────────────
 async function loadSessions() {
   const res  = await fetch('/api/sessions').catch(() => null);

@@ -6,6 +6,7 @@ at import time, after .env is loaded below.
 """
 
 import os
+import shlex
 import sys
 
 from dotenv import load_dotenv
@@ -116,3 +117,17 @@ HOST_ID = "__host__"
 
 # Filesystem reported in the footer — defaults to home (where models/HF cache live).
 DISK_PATH = os.environ.get("TOOLBOX_WEB_DISK_PATH", os.path.expanduser("~"))
+
+# ── App self-update ────────────────────────────────────────────────────────────
+# A background thread fetches the app's own git remote and the UI shows an
+# "update available" banner when this checkout is behind upstream. The banner's
+# button launches this command as a HOST_ID session (bash -lc), streaming its
+# output — same machinery as the "Update & restart toolbox-web" host command.
+# Overridable so non-uv installs (or a different service name) still work.
+SELF_UPDATE_CMD = os.environ.get(
+    "TOOLBOX_WEB_SELF_UPDATE_CMD",
+    f"cd {shlex.quote(PROJECT_ROOT)} && git pull && uv sync && "
+    "systemctl --user restart toolbox-web.service",
+)
+# How often the background thread re-fetches the remote (seconds).
+SELF_UPDATE_INTERVAL = int(os.environ.get("TOOLBOX_WEB_SELF_UPDATE_INTERVAL", "900"))

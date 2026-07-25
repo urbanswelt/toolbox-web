@@ -60,6 +60,17 @@
   </div>
 </header>
 
+<!-- Shows when this checkout is behind its git remote (see /api/app-update). -->
+<div class="update-banner" id="updateBanner" hidden>
+  <span class="update-banner-mark" aria-hidden="true">
+    <svg viewBox="0 0 24 24"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+  </span>
+  <span class="update-banner-text" id="updateBannerText"></span>
+  <button class="update-banner-btn" id="updateBannerBtn" onclick="runAppUpdate()"
+          data-tip="git pull + uv sync, then restart the service — output streams below">Update &amp; restart</button>
+  <button class="update-banner-x" onclick="dismissUpdateBanner()" aria-label="Dismiss until next check">&times;</button>
+</div>
+
 <div class="app">
 
   <!-- ── Output (full canvas): session tabs + terminal ── -->
