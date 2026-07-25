@@ -9,7 +9,7 @@ session/container reaper and the system-stats sampler). The thin top-level
 import os
 import threading
 
-from flask import Flask
+from flask import Flask, url_for
 
 from .settings import PROJECT_ROOT
 
@@ -68,6 +68,17 @@ def create_app() -> Flask:
         updates,
     ):
         app.register_blueprint(module.bp)
+
+    # Cache-busting for the bundled static assets: append ?v=<mtime> so a changed
+    # style.css / app.js is refetched by the browser without a manual hard-reload.
+    def static_url(filename: str) -> str:
+        try:
+            version = int(os.path.getmtime(os.path.join(app.static_folder, filename)))
+        except OSError:
+            version = 0
+        return url_for("static", filename=filename, v=version)
+
+    app.jinja_env.globals["static_url"] = static_url
 
     _start_background_threads()
     return app
