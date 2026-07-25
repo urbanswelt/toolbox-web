@@ -16,6 +16,13 @@ dev = [
     "pytest>=8.0",
 ]
 
+[tool.ruff.lint]
+# Pin the rule set to ruff's historical default (E4/E7/E9 + F) so a ruff version
+# bump can't silently introduce new lint findings and break CI on Dependabot PRs.
+# Opting into more rule groups (I, UP, SIM, …) should be a deliberate change here,
+# not a side effect of an upgrade. See CI's "Lint" step: `ruff check .`.
+select = ["E4", "E7", "E9", "F"]
+
 [tool.pytest.ini_options]
 # The app isn't installed as a package (it's run from the repo root), so put the
 # root on sys.path for `import toolbox_web`.
