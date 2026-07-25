@@ -28,9 +28,11 @@ def _start_background_threads() -> None:
         # unit test of a pure helper doesn't spin up the reaper/sampler threads.
         from .sessions import _session_watcher
         from .stats import _stats_sampler
+        from .updates import _update_watcher
 
         threading.Thread(target=_session_watcher, daemon=True).start()
         threading.Thread(target=_stats_sampler, daemon=True).start()
+        threading.Thread(target=_update_watcher, daemon=True).start()
         _threads_started = True
 
 
@@ -42,7 +44,17 @@ def create_app() -> Flask:
         static_folder=os.path.join(PROJECT_ROOT, "static"),
     )
 
-    from . import commands, configfiles, models, presets, stats, terminal, toolboxes, views
+    from . import (
+        commands,
+        configfiles,
+        models,
+        presets,
+        stats,
+        terminal,
+        toolboxes,
+        updates,
+        views,
+    )
 
     for module in (
         views,
@@ -53,6 +65,7 @@ def create_app() -> Flask:
         toolboxes,
         stats,
         terminal,
+        updates,
     ):
         app.register_blueprint(module.bp)
 
