@@ -6,11 +6,22 @@ on:
   pull_request:
   workflow_dispatch:
 
+# Needed so the auto-heal step below can push the regenerated requirements.txt
+# back to a Dependabot PR branch. (Dependabot-triggered runs get a read-only
+# GITHUB_TOKEN unless permissions are granted explicitly.)
+permissions:
+  contents: write
+
 jobs:
   check:
     runs-on: ubuntu-latest
     steps:
+      # Check out the PR's own branch (not the detached merge ref) with push
+      # credentials, so the heal step can commit back to it. For push/dispatch
+      # runs github.head_ref is empty and checkout falls back to the event ref.
       - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.head_ref }}
 
       - name: Install uv
         uses: astral-sh/setup-uv@v7
@@ -22,13 +33,33 @@ jobs:
         run: uv sync --group dev
 
       # requirements.txt is a generated pip fallback — it must stay a faithful
-      # export of uv.lock. Re-export and fail if it drifts (e.g. a lock bump that
-      # forgot to regenerate it, or a hand-edit of the derived file).
+      # export of uv.lock. Re-export it; if it drifted, auto-heal Dependabot PRs
+      # (grouped bumps ship a requirements.txt that doesn't match their uv.lock)
+      # by committing the regenerated file back. Human PRs still fail hard, so a
+      # hand-edit of the derived file doesn't slip through silently.
       - name: requirements.txt in sync with uv.lock
+        env:
+          HEAD_REF: ${{ github.head_ref }}
+          ACTOR: ${{ github.actor }}
         run: |
           uv export --no-hashes --no-emit-project -o requirements.txt
-          git diff --exit-code requirements.txt \
-            || { echo "::error::requirements.txt is out of sync with uv.lock. Run: uv export --no-hashes --no-emit-project -o requirements.txt"; exit 1; }
+          if git diff --quiet requirements.txt; then
+            echo "requirements.txt already in sync with uv.lock."
+            exit 0
+          fi
+          if [ "$ACTOR" = "dependabot[bot]" ] && [ -n "$HEAD_REF" ]; then
+            echo "Dependabot PR: requirements.txt drifted from uv.lock — healing it."
+            git --no-pager diff --stat requirements.txt
+            git config user.name  "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git commit -am "deps: sync requirements.txt with uv.lock [auto]"
+            git push origin "HEAD:$HEAD_REF"
+            echo "::notice::requirements.txt was out of sync; committed the regenerated export back to this PR."
+          else
+            git --no-pager diff requirements.txt
+            echo "::error::requirements.txt is out of sync with uv.lock. Run: uv export --no-hashes --no-emit-project -o requirements.txt"
+            exit 1
+          fi
 
       - name: Lint
         run: uv run ruff check .
