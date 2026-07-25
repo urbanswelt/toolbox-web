@@ -65,7 +65,7 @@ pyyaml==6.0.3
     #   toolbox-web
 ruamel-yaml==0.19.1
     # via toolbox-web
-ruff==0.15.22
+ruff==0.16.0
 tqdm==4.68.3
     # via huggingface-hub
 typing-extensions==4.16.0
